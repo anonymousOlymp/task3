@@ -21,21 +21,35 @@ input_file_name = "data/input.csv"
 output_file_name = "data/result.csv"
 
 def main():
-    input_dataset = pd.read_csv(input_file_name)
-    keys = []
-    decoded_emails = []
-    decoded_addresses = []
-    for row in input_dataset.itertuples():
-        email, address = row.email, row.address
-        for key in range(max_decode_number):
-            decoded_email = decode(email, key)
-            decoded_address = decode(address, key)
-            if "кв." in decoded_address and "д." in decoded_address:
+    try:
+        input_dataset = pd.read_csv(input_file_name)
+        keys = []
+        decoded_emails = []
+        decoded_addresses = []
+        for row in input_dataset.itertuples():
+            email, address = row.email, row.address
+            found = False
+            for key in range(max_decode_number):
+                decoded_email = decode(email, key)
+                decoded_address = decode(address, key)
+                if "кв." in decoded_address and "д." in decoded_address:
+                    found = True
+                    break
+            if not found:
+                print("Error. Key words was not found!")
                 return
-        keys.append(key)
-        decoded_emails.append(decoded_email)
-        decoded_addresses.append(decoded_address)
-    pd.DataFrame({"email" : decoded_emails, "address" : decoded_addresses, "key" : keys}).to_csv(output_file_name)
+            keys.append(key)
+            decoded_emails.append(decoded_email)
+            decoded_addresses.append(decoded_address)
+        pd.DataFrame({"email" : decoded_emails, "address" : decoded_addresses, "key" : keys}).to_csv(output_file_name)
+    except Exception as exception:
+        print(f"Error. Exception [{exception}] was caught!")
+
+def decode(string: str, key: int):
+    decoded : str = ""
+    for char in string:
+        decoded += decode_char(char, key)
+    return decoded
 
 def decode_char(char: str, key: int) -> str:
     if char in english_characters:
@@ -50,12 +64,6 @@ def decode_char(char: str, key: int) -> str:
 
 def translate_with_dictionaries(char, key, index_to_char, char_to_index) -> str:
     return index_to_char[(char_to_index[char] - key) % len(index_to_char)]
-
-def decode(string: str, key: int):
-    decoded : str = ""
-    for char in string:
-        decoded += decode_char(char, key)
-    return decoded
 
 if __name__ == "__main__":
     main()
